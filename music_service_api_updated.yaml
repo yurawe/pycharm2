@@ -1,0 +1,1743 @@
+openapi: 3.0.3
+info:
+  title: Music Service
+  description: |-
+   The service for creating playlists and editing songs, albums, artists, users resources.
+  contact:
+    email: anastasiia.kudybovska.kn.2021@lpnu.ua
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: https://musicservice/api/v1
+tags:
+  - name: user
+    description: Operations about user
+  - name: song
+    description: Everything about songs
+  - name: artist
+    description: Everything about artist
+  - name: playlist
+    description: Everything about playlist
+  - name: playlist_song
+    description: Access to song in playlist
+  - name: user_playlist
+    description: Access to user playlist
+paths:
+  /song:
+    get:
+      tags:
+       - song
+      description: Obtain information about all song
+      operationId: getSong
+      responses:
+        200:
+          description: Sucessfully pulled song info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+        400:  
+          description: An Error occured
+        404:
+          description: A page was not found.
+      security:
+        - musicservice_auth:
+          - read:song   
+    post:
+      tags:
+        - song
+      description: Add a new song 
+      operationId: addsong
+      requestBody:
+        description: Create a new song
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Song'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - read:song
+            - write:song
+  /song/{songId}:
+    get:
+      tags:
+        - song
+      description: Returns a single song
+      parameters:
+        - name: songId
+          in: path
+          description: ID of song to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Student not found
+      security:
+        - musicservice_auth:
+            - read:song
+    put:
+      tags: 
+      - song
+      parameters:
+          - in: path 
+            name: songId
+            description: The id of specific song
+            required: true
+            schema:
+              type: integer 
+      requestBody:
+        description: Update an existent song
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Song'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Student not found
+        '405':
+          description: Validation exception
+      security:
+        - musicservice_auth:
+            - read:song
+            - write:song
+    delete:
+      tags:
+        - song
+      parameters:
+        - in: path 
+          name: songId
+          description: The id of specific song
+          required: true
+          schema:
+            type: integer
+            example: 5  
+      responses:
+        200:
+          description: Sucessfully deleted a song
+        400:
+          description: Wrong ID
+      security:
+        - musicservice_auth:
+          - read:song
+          - write:song
+  /song/album/{albumId}:
+    get:
+      tags:
+        - song
+      summary: Finds Songs by album
+      description: Multiple album values can be provided with comma separated strings
+      operationId: findSongsByAlbum
+      parameters:
+        - name: albumId
+          in: path
+          description: Album values that need to be considered for filter
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+        '400':
+          description: Invalid genre value
+      security:
+        - musicservice_auth:
+            - read:songs 
+  /song/languges/{language}:
+    get:
+      tags:
+        - song
+      summary: Finds Songs by language
+      description: Multiple languages values can be provided with comma separated strings
+      operationId: findSongsByLanguage
+      parameters:
+        - name: language
+          in: path
+          description: Language values that need to be considered for filter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+        '400':
+          description: Invalid language value
+      security:
+        - musicservice_auth:
+            - read:songs 
+  /song/genre/{genre}:
+    get:
+      tags:
+        - song
+      summary: Finds Songs by genre
+      description: Multiple album values can be provided with comma separated strings
+      operationId: findSongsByAGenre
+      parameters:
+        - name: genre
+          in: path
+          description: Album values that need to be considered for filter
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+        '400':
+          description: Invalid genre value
+      security:
+        - musicservice_auth:
+            - read:songs 
+  /artist:
+    get:
+      tags:
+       - artist
+      description: Obtain information about all artist
+      operationId: getArtist
+      responses:
+        200:
+          description: Sucessfully pulled artist info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artist'
+        400:  
+          description: An Error occured
+        404:
+          description: A page was not found.
+      security:
+        - musicservice_auth:
+          - read:artist   
+    post:
+      tags:
+        - artist
+      description: Add a new artist 
+      operationId: addartist
+      requestBody:
+        description: Create a new artist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Artist'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - read:artist
+            - write:artist
+  /artist/{artistId}:
+    get:
+      tags:
+        - artist
+      description: Returns a single artist
+      parameters:
+        - name: artistId
+          in: path
+          description: ID of artist to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Student not found
+      security:
+        - musicservice_auth:
+            - read:artist
+    put:
+      tags: 
+      - artist
+      parameters:
+          - in: path 
+            name: artistId
+            description: The id of specific artist
+            required: true
+            schema:
+              type: integer 
+      requestBody:
+        description: Update an existent artist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Artist'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Student not found
+        '405':
+          description: Validation exception
+      security:
+        - musicservice_auth:
+            - read:artist
+            - write:artist
+    delete:
+      tags:
+        - artist
+      parameters:
+        - in: path 
+          name: artistId
+          description: The id of specific artist
+          required: true
+          schema:
+            type: integer
+            example: 5  
+      responses:
+        200:
+          description: Sucessfully deleted a artist
+        400:
+          description: Wrong ID
+      security:
+        - musicservice_auth:
+          - read:artist
+          - write:artist
+
+  /artist_song:
+    get:
+      tags:
+       - artist_song
+      description: Obtain information about all artist
+      operationId: getArtistSong
+      responses:
+        200:
+          description: Sucessfully pulled artist info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Implementation_info'
+        400:  
+          description: An Error occured
+        404:
+          description: A page was not found.
+      security:
+        - musicservice_auth:
+            - write:song
+            - read:song
+            - write:artist
+            - read:artist
+    post:
+      tags:
+        - artist_song
+      description: Add a new artist song
+      operationId: addartistSong
+      requestBody:
+        description: Create a new artist song
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Implementation'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Implementation_info'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - write:artist
+            - read:artist
+            - write:song
+            - read:song
+  /artist_song/artist/{artistId}:
+    get:
+      tags:
+        - artist_song
+      summary: Finds Songs by artist
+      description: Multiple artist values can be provided with comma separated strings
+      operationId: findSongsByArtist
+      parameters:
+        - name: artistId
+          in: path
+          description: Artist values that need to be considered for filter
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Implementation_info'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Implementation_info'
+        '400':
+          description: Invalid artist value
+      security:
+        - musicservice_auth:
+            - read:artist
+            - read:songs 
+  /artist_song/artist/{artistId}/song/{songId}:
+    get:
+      tags:
+        - artist_song
+      summary: Find implementation by ID
+      description: Returns a single implementation
+      operationId: getImplementationById
+      parameters:
+        - name: artistId
+          in: path
+          description: ID of implementation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of implementation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Implementation_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Implementation_info'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: implementation not found
+      security:
+        - musicservice_auth:
+            - read:songs 
+            - read:artist
+    put:
+      tags:
+        - artist_song
+      summary: Updates a implementation  in the music service with form data
+      description: ''
+      operationId: implementationSongWithForm
+      parameters:
+        - name: artistId
+          in: path
+          description: ID of implementation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of implementation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update an existent artist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Implementation'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Implementation_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Implementation_info'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - write:songs
+            - read:songs 
+            - write:artist
+            - read:artist 
+    delete:
+      tags:
+        - artist_song
+      summary: Deletes an implementation
+      description: delete an implementation
+      operationId: deleteImplementation
+      parameters:
+        - name: artistId
+          in: path
+          description: ID of implementation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of implementation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid artist value
+        '404':
+          description: Artist not found
+      security:
+        - api_key: []
+        - musicservice_auth:
+            - write:songs
+            - read:songs 
+            - write:artist
+            - read:artist 
+   
+  /playlist:
+    get:
+      tags:
+       - playlist
+      description: Obtain information about all playlist
+      operationId: getPlaylist
+      responses:
+        200:
+          description: Sucessfully pulled playlist info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist'
+        400:  
+          description: An Error occured
+        404:
+          description: A page was not found.
+      security:
+        - musicservice_auth:
+          - read:playlist 
+    post:
+      tags:
+        - playlist
+      description: Add a new playlist 
+      operationId: addplaylist
+      requestBody:
+        description: Create a new playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - read:playlist
+            - write:playlist
+  /playlist/{playlistId}:
+    get:
+      tags:
+        - playlist
+      description: Returns a single playlist
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of playlist to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Student not found
+      security:
+        - musicservice_auth:
+            - read:playlist
+    put:
+      tags: 
+      - playlist
+      parameters:
+          - in: path 
+            name: playlistId
+            description: The id of specific playlist
+            required: true
+            schema:
+              type: integer 
+      requestBody:
+        description: Update an existent playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Student not found
+        '405':
+          description: Validation exception
+      security:
+        - musicservice_auth:
+            - read:playlist
+            - write:playlist
+    delete:
+      tags:
+        - playlist
+      parameters:
+        - in: path 
+          name: playlistId
+          description: The id of specific playlist
+          required: true
+          schema:
+            type: integer
+            example: 5  
+      responses:
+        200:
+          description: Sucessfully deleted a playlist
+        400:
+          description: Wrong ID
+      security:
+        - musicservice_auth:
+          - read:playlist
+          - write:playlist
+            
+  /playlist_song:
+    get:
+      tags:
+       - playlist_song
+      description: Obtain information about all playlistSong
+      operationId: getPlaylistSong
+      responses:
+        200:
+          description: Sucessfully pulled artist info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_song_info'
+        400:  
+          description: An Error occured
+        404:
+          description: A page was not found.
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+            - read:song
+            - write:song
+    post:
+      tags:
+        - playlist_song
+      description: Add a new playlist song
+      operationId: addPlaylistSong
+      requestBody:
+        description: Create a new playlist song
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist_song'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist_song_info'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+            - read:song
+            - write:song
+  /playlist_song/playlist/{playlistId}/song/{songId}:
+    get:
+      tags:
+        - playlist_song
+      summary: Find PlaylistSong by ID
+      description: Returns a single PlaylistSong
+      operationId: getPlaylistSongById
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of PlaylistSong to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of PlaylistSong to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist_song_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Playlist_song_info'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: PlaylistSong not found
+      security:
+        - musicservice_auth:
+            - read:playlist
+            - read:song
+    put:
+      tags:
+        - playlist_song
+      summary: Updates a PlaylistSong in the music service with form data
+      description: ''
+      operationId: PlaylistSongWithForm
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of PlaylistSong to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of PlaylistSong to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update an existent PlaylistSong
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist_song'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist_song_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Implementation_info'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - write:songs
+            - read:songs 
+            - write:artist
+            - read:artist 
+    delete:
+      tags:
+        - playlist_song
+      summary: Deletes an PlaylistSong
+      description: delete an PlaylistSong
+      operationId: deletePlaylistSong
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of PlaylistSong to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of PlaylistSong to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid PlaylistSong value
+        '404':
+          description: PlaylistSong not found
+      security:
+        - api_key: []
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+            - write:song
+            - read:song
+  /playlist_song/playlist/{playlistId}:
+    get:
+      tags:
+        - playlist_song
+      summary: Finds playlistSong by playlist
+      description: Multiple artist values can be provided with comma separated strings
+      operationId: findSongsByPlaylist
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_song_info'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_song_info'
+        '400':
+          description: Invalid playlist value
+      security:
+        - musicservice_auth:
+            - read:playlist
+            - read:songs    
+  /playlist_song/playlist/{songId}:
+    get:
+      tags:
+        - playlist_song
+      summary: Finds playlist by song
+      operationId: findPlaylistBySongs
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_song_info'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_song_info'
+        '400':
+          description: Invalid playlist value
+      security:
+        - musicservice_auth:
+            - read:playlist
+            - read:songs     
+  /user_playlist:
+    put:
+      tags:
+        - user_playlist
+      summary: Update an existing user playlist
+      description: Update an existing user playlist by Id
+      operationId: updateUserPLaylist
+      requestBody:
+        description: Update an existent user playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User_playlist'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User_playlist'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User_playlist'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: song in playlist not found
+        '405':
+          description: Validation exception
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+            - read:user
+            - write:user
+    post:
+      tags:
+        - user_playlist
+      summary: Add a new user playlist
+      description: Add a new user playlist 
+      operationId: addUserPlaylist
+      requestBody:
+        description: Create a new user playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User_playlist'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User_playlist'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User_playlist'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+            - read:user
+            - write:user
+  /user_playlist/{user_playlistId}:
+    get:
+      tags:
+        - user_playlist
+      summary: Find user playlist info by ID
+      description: Returns a single user playlist info
+      operationId: getUserPlaylistInfoById
+      parameters:
+        - name: user_playlistId
+          in: path
+          description: ID of playlist to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: playlist not found
+        '405':
+          description: access to the playlist is not allowed
+      security:
+        - musicservice_auth:
+            - read:playlist
+    post:
+      tags:
+        - user_playlist
+      summary: Updates a user playlist in the music service with form data
+      description: ''
+      operationId: updateUserPlaylistWithForm
+      parameters:
+        - name: user_playlistId
+          in: path
+          description: ID of user playlist that needs to be updated
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: name
+          in: query
+          description: Name of user playlist that needs to be updated
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User_playlist_info'
+        '405':
+          description: Invalid input
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+    delete:
+      tags:
+        - user_playlist
+      summary: Deletes an user playlist
+      description: delete an user playlist
+      operationId: deleteUserPlaylist
+      parameters:
+        - name: api_key
+          in: header
+          description: ''
+          required: false
+          schema:
+            type: string
+        - name: user_playlistId
+          in: path
+          description: User Playlist id to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid playlist value
+        '404':
+          description: playlist not found
+        '405':
+          description: access to the playlist is not allowed
+      security:
+        - api_key: []
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist         
+            
+  /user_playlist/{username}:
+    get:
+      tags:
+        - user_playlist
+      summary: Get playists by user name
+      description: ''
+      operationId: getPlaylistByUserName
+      parameters:
+        - name: username
+          in: path
+          description: 'Username values that need to be considered for filter'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_songs_info'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist_songs_info'
+        '400':
+          description: Invalid username value
+        '405':
+          description: access to the playlist is not allowed
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+  /user_playlist/{username}/public:
+    get:
+      tags:
+        - user_playlist
+      summary: Get public playist by user name
+      description: ''
+      operationId: getPublicPlaylistByUserName
+      parameters:
+        - name: username
+          in: path
+          description: 'Username values that need to be considered for filter'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist_songs_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Playlist_songs_info'
+        '400':
+          description: Invalid username value
+      
+  /user_playlist/{username}/private:
+    get:
+      tags:
+        - user_playlist
+      summary: Get private playist by user name
+      description: ''
+      operationId: getPrivatePlaylistByUserName
+      parameters:
+        - name: username
+          in: path
+          description: 'Username values that need to be considered for filter'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist_songs_info'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Playlist_songs_info'
+        '400':
+          description: Invalid username value
+        '405':
+          description: access to the playlist is not allowed
+      security:
+        - musicservice_auth:
+            - write:playlist
+            - read:playlist
+            
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+        '405':
+          description: invalid input
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      parameters: []
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+      security:
+        - musicservice_auth:
+            - read:user
+  /user/{username}:
+    get:
+      tags:
+        - user
+      summary: Get user by user name
+      description: ''
+      operationId: getUserByName
+      parameters:
+        - name: username
+          in: path
+          description: 'The name that needs to be fetched. Use user1 for testing. '
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_id'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User_id'
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+      security:
+        - musicservice_auth:
+            - read:user
+    put:
+      tags:
+        - user
+      summary: Update user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+        - name: username
+          in: path
+          description: name that need to be deleted
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update an existent user in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+      security:
+        - musicservice_auth:
+            - read:user
+            - write:user
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+        - name: username
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+      security:
+        - musicservice_auth:
+            - read:user
+            - write:user
+            
+            
+components:
+  schemas:
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: pop
+      xml:
+        name: genre
+    Album:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: album name
+      xml:
+        name: album
+    User_id:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: theUser
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+        phone:
+          type: string
+          example: '12345'
+        userStatus:
+          type: integer
+          description: User Status
+          format: int32
+          example: 1
+      xml:
+        name: user
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: theUser
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+        phone:
+          type: string
+          example: '12345'
+        userStatus:
+          type: integer
+          description: User Status
+          format: int32
+          example: 1
+      xml:
+        name: user
+    Artist_id:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        dateOfBirthday:
+          type: string
+          format: date
+          example: "2022-02-24"
+        country:
+          type: string
+          example: Ukraine 
+      xml:
+        name: artist
+    Artist:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        dateOfBirthday:
+          type: string
+          format: date
+          example: "2022-02-24"
+        country:
+          type: string
+          example: Ukraine 
+      xml:
+        name: artist
+    Song_id:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: Song name
+        lenght:
+          type: number
+          format: float
+          example: 3.25
+        language:
+          type: string
+          example: English
+        release_date:
+          type: string
+          format: date
+          example: "2022-02-24"
+        genre:
+          $ref: '#/components/schemas/Genre'
+        album:
+          $ref: '#/components/schemas/Album'
+      xml:
+        name: song
+    Song:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: Song name
+        lenght:
+          type: number
+          format: float
+          example: 3.25
+        language:
+          type: string
+          example: English
+        release_date:
+          type: string
+          format: date
+          example: "2022-02-24"
+        genre:
+          $ref: '#/components/schemas/Genre'
+        album:
+          $ref: '#/components/schemas/Album'
+      xml:
+        name: song
+    Implementation:
+      type: object
+      properties:
+        songId:
+          type: integer
+          format: int64
+          example: 10
+        artistId:
+          type: integer
+          format: int64
+          example: 10
+      xml:
+        name: implementation
+    Implementation_info:
+      type: object
+      properties:
+        song:
+          $ref: '#/components/schemas/Song'
+        artist:
+          $ref: '#/components/schemas/Artist'
+      xml:
+        name: implementation_info
+    Playlist:
+      type: object
+      properties:
+        name:
+          type: string
+          example: My playlist
+        is_private:
+          type: boolean
+          default: false
+        create_at:
+          type: string
+          format: date-time
+        update_at:
+          type: string
+          format: date-time
+        number_of_songs:
+          type: integer
+          format: int64
+      xml:
+        name: playlistInfo
+    Playlist_song:
+      type: object
+      properties:
+        playlist_id:
+          type: integer
+          format: int64
+          example: 10
+        song_id:
+          type: integer
+          format: int64
+          example: 10
+      xml:
+        name: playlist_song
+    Playlist_song_info:
+      type: object
+      properties:
+        playlistInfo:
+          $ref: '#/components/schemas/Playlist'
+        song:
+          $ref: '#/components/schemas/Song'
+      xml:
+        name: playlist_song_info
+    User_playlist:
+      type: object
+      properties:
+        playlist_id:
+          type: integer
+          format: int64
+          example: 10
+        user_id:
+          type: integer
+          format: int64
+          example: 10
+      xml:
+        name: playlist_song
+    User_playlist_info:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        playlist:
+          $ref: '#/components/schemas/Playlist'
+      xml:
+        name: playlist_song
+    Playlist_songs_info:
+      type: object
+      properties:
+        playlistInfo:
+          $ref: '#/components/schemas/Playlist'
+        songs:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Song'
+      xml:
+        name: playlist_song_info
+  requestBodies:
+    SongArray:
+      description: List of song object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Song'
+    ArtistArray:
+      description: List of artist object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Artist'
+    UserArray:
+      description: List of user object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+  securitySchemes:
+    musicservice_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://musicservice/oauth/authorize
+          scopes:
+            write:user: modify user 
+            read:user: read user
+            write:song: modify song 
+            read:song: read your song
+            write:playlist: modify playlist
+            read:playlist: read your playlist
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header

@@ -1,8 +1,10 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
 
-Base = declarative_base()
-DB_URI = "mysql+pymysql://root:your_password@localhost:3306/playlist_service_db"
+DB_URI = "mysql+pymysql://root:Qwerty123@localhost:3306/playlist_service_db"
 engine = create_engine(DB_URI)
 
-Session = sessionmaker(bind=engine)
+
+SessionFactory = sessionmaker(bind=engine)
+Session = scoped_session(SessionFactory)
+Base = declarative_base()
