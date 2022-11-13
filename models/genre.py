@@ -7,5 +7,4 @@ from models.model import Base
 class Genre(Base):
     __tablename__ = "genre"
     id = Column(Integer, primary_key=True)
-    name = Column(String(25), nullable=False)
-    songs_g = relationship("Song", backref="genres", passive_deletes=True)
+    name = Column(String(25), unique=True, nullable=False)

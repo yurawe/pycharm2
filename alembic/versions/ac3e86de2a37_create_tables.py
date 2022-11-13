@@ -1,8 +1,8 @@
-"""Created tables
+"""Create tables
 
-Revision ID: c4966764b940
+Revision ID: ac3e86de2a37
 Revises: 
-Create Date: 2022-10-22 21:46:23.985520
+Create Date: 2022-11-12 15:40:50.613361
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c4966764b940'
+revision = 'ac3e86de2a37'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,8 +25,7 @@ def upgrade():
     )
     op.create_table('artist',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('first_name', sa.String(length=25), nullable=False),
-    sa.Column('last_name', sa.String(length=25), nullable=False),
+    sa.Column('name', sa.String(length=25), nullable=False),
     sa.Column('date_of_birth', sa.Date(), nullable=True),
     sa.Column('country', sa.String(length=25), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -34,10 +33,12 @@ def upgrade():
     op.create_table('genre',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=25), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('playlist',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=25), nullable=False),
     sa.Column('is_private', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.Date(), nullable=False),
     sa.Column('updated_at', sa.Date(), nullable=False),
@@ -48,10 +49,12 @@ def upgrade():
     sa.Column('first_name', sa.String(length=25), nullable=False),
     sa.Column('last_name', sa.String(length=25), nullable=False),
     sa.Column('email', sa.String(length=25), nullable=False),
-    sa.Column('phone', sa.String(length=25), nullable=False),
-    sa.Column('password', sa.String(length=255), nullable=False),
-    sa.Column('user_status', sa.Integer(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('phone', sa.String(length=25), nullable=True),
+    sa.Column('password', sa.String(length=512), nullable=False),
+    sa.Column('username', sa.String(length=25), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('username')
     )
     op.create_table('song',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -61,27 +64,27 @@ def upgrade():
     sa.Column('release_date', sa.Date(), nullable=False),
     sa.Column('genre_id', sa.Integer(), nullable=True),
     sa.Column('album_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['album_id'], ['album.id'], ),
-    sa.ForeignKeyConstraint(['genre_id'], ['genre.id'], ),
+    sa.ForeignKeyConstraint(['album_id'], ['album.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['genre_id'], ['genre.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user_playlist',
     sa.Column('playlist_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['playlist_id'], ['playlist.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], )
+    sa.ForeignKeyConstraint(['playlist_id'], ['playlist.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE')
     )
     op.create_table('artist_song',
     sa.Column('artist_id', sa.Integer(), nullable=True),
     sa.Column('song_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['artist_id'], ['artist.id'], ),
-    sa.ForeignKeyConstraint(['song_id'], ['song.id'], )
+    sa.ForeignKeyConstraint(['artist_id'], ['artist.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['song_id'], ['song.id'], ondelete='CASCADE')
     )
     op.create_table('playlist_song',
     sa.Column('playlist_id', sa.Integer(), nullable=True),
     sa.Column('song_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['playlist_id'], ['playlist.id'], ),
-    sa.ForeignKeyConstraint(['song_id'], ['song.id'], )
+    sa.ForeignKeyConstraint(['playlist_id'], ['playlist.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['song_id'], ['song.id'], ondelete='CASCADE')
     )
     # ### end Alembic commands ###
 

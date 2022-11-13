@@ -7,4 +7,4 @@ class Album(Base):
     __tablename__ = "album"
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
-    songs = relationship("Song", backref="albums", passive_deletes=True)
+

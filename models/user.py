@@ -13,5 +13,6 @@ class User(Base):
     last_name = Column(String(25), nullable=False)
     email = Column(String(25), nullable=False)
     phone = Column(String(25), nullable=True)
-    password = Column(String(255), nullable=False)
+    password = Column(String(512), nullable=False)
+    username = Column(String(25), unique=True, nullable=False)
     playlists = relationship("Playlist", secondary=user_playlist, passive_deletes=True)
