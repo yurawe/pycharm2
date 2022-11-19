@@ -2,6 +2,12 @@ from datetime import date
 
 from flask_bcrypt import generate_password_hash
 from marshmallow import Schema, validate, fields
+
+class LoginSchema(Schema):
+    username = fields.String()
+    password = fields.String()
+
+
 class UserData(Schema):
     id = fields.Integer()
     username = fields.String()
@@ -17,9 +23,10 @@ class UserSchema(Schema):
     last_name = fields.String()
     email = fields.String(validate=validate.Email())
     phone = fields.String()
-    password = fields.Function(
-        deserialize=lambda obj: generate_password_hash(obj), load_only=True
-    )
+    password = fields.String()
+    # password = fields.Function(
+    #     deserialize=lambda obj: generate_password_hash(obj), load_only=True
+    # )
 
 class GenreData(Schema):
     id = fields.Integer()
@@ -111,3 +118,6 @@ class User_playlistWithSongsAllData(Schema):
     playlist = fields.Nested(lambda: PlaylistData())
     songs = fields.Nested(lambda: SongAllData(), many=True)
 
+class User_playlistUserNameData(Schema):
+    owner = fields.String()
+    playlist = fields.Nested(lambda: PlaylistData())
