@@ -2,7 +2,9 @@ from sqlalchemy import Column, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from models.user_playlist import user_playlist
 
-from models.model import Base
+from models.model import Base, Session
+
+session = Session()
 
 
 class User(Base):
@@ -16,3 +18,17 @@ class User(Base):
     password = Column(String(512), nullable=False)
     username = Column(String(25), unique=True, nullable=False)
     playlists = relationship("Playlist", secondary=user_playlist, passive_deletes=True)
+
+    @classmethod
+    def get_by_username(cls, username):
+        user = session.query(User).filter_by(username=username).first()
+        return user
+
+    @classmethod
+    def get_by_email(cls, email):
+        user = session.query(User).filter_by(email=email).first()
+        return user
+
+    def save_to_db(self):
+        session.add(self)
+        session.commit()
