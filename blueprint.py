@@ -1,6 +1,5 @@
 from bcrypt import checkpw, hashpw, gensalt
 from flask import Blueprint, request, jsonify, url_for, Response
-from flask_bcrypt import generate_password_hash, check_password_hash
 from marshmallow import ValidationError
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.utils import redirect
@@ -76,12 +75,12 @@ def create_user():
         user_data = UserSchema().load(request_data)
     except ValidationError as err:
         return err.messages, 422
-    user = session.query(User).filter_by(username=user_data["username"]).first()
-    user2 = session.query(User).filter_by(email=user_data["email"]).first()
+    user = User.get_by_username(user_data["username"])
     if user:
         return errors.exists
+    user2 = User.get_by_email(user_data["email"])
     if user2:
-        return {'error': {'code': 403, 'message': "User with this email already exists"}}, 403
+        return errors.exists
     user = User(
         username=request_data['username'],
         password=hashpw(bytes(request_data['password'], 'utf-8'), gensalt(14)).decode(),
@@ -90,9 +89,8 @@ def create_user():
         phone=request_data['phone'],
         email=request_data['email']
     )
-    Session.add(user)
-    Session.commit()
-    return UserData().dump(user)
+    user.save_to_db()
+    return jsonify(UserData().dump(user)), 200
 
 
 @api_blueprint.route('/user/login', methods=['GET'])
@@ -118,10 +116,10 @@ def login():
         # return {'error': {'code': 400, 'message': 'Incorrect password'}}, 400 // 401 // 403
 
 
-@api_blueprint.route("/user/logout")
-@auth.login_required
-def logout():
-    return redirect(f"http://logout:logout@{request.host}{url_for('api.login')}")
+# @api_blueprint.route("/user/logout")
+# @auth.login_required
+# def logout():
+#     return redirect(f"http://logout:logout@{request.host}{url_for('api.login')}")
 
 
 @api_blueprint.route("/users", methods=["GET"])
@@ -145,10 +143,10 @@ def user_username_api(username):
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            data = UserSchema().load(json_data, partial=True)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        data = UserSchema().load(json_data, partial=True)
+        # except ValidationError as err:
+        #     return err.messages, 422
         for key, value in data.items():
             if key == "username":
                 us = session.query(User).filter_by(username=data["username"]).first()
@@ -181,10 +179,10 @@ def genre_api():
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            genre_data = GenreSchema().load(json_data)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        genre_data = GenreSchema().load(json_data)
+        # except ValidationError as err:
+        #     return err.messages, 422
         genre = session.query(Genre).filter_by(name=genre_data["name"]).first()
         if genre:
             return errors.exists
@@ -210,20 +208,20 @@ def get_genre_id_api(genreId):
         return GenreData().dump(gen)
 
 
-@api_blueprint.route('/genre/<int:genreId>', methods=['PUT', 'DELETE'])
+@api_blueprint.route('/genre/<string:name>', methods=['PUT', 'DELETE'])
 @auth.login_required(role="admin")
-def genre_id_api(genreId):
-    gen = session.query(Genre).filter_by(id=genreId).first()
+def genre_id_api(name):
+    gen = session.query(Genre).filter_by(name=name).first()
     if not gen:
         return errors.not_found
     if request.method == 'PUT':
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            data = GenreSchema().load(json_data, partial=True)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        data = GenreSchema().load(json_data, partial=True)
+        # except ValidationError as err:
+        #     return err.messages, 422
         updated_genre = update_entry(gen, **data)
         return GenreData().dump(updated_genre)
     if request.method == 'DELETE':
@@ -239,10 +237,10 @@ def album_api():
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            album_data = AlbumSchema().load(json_data)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        album_data = AlbumSchema().load(json_data)
+        # except ValidationError as err:
+        #     return err.messages, 422
         new_album = create_entry(Album, **album_data)
         return jsonify(AlbumData().dump(new_album))
 
@@ -275,10 +273,10 @@ def album_id_api(albumId):
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            data = AlbumSchema().load(json_data, partial=True)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        data = AlbumSchema().load(json_data, partial=True)
+        # except ValidationError as err:
+        #     return err.messages, 422
         for key, value in data.items():
             if key == "name":
                 g = session.query(Genre).filter_by(name=data["name"]).first()
@@ -299,10 +297,10 @@ def artist_api():
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            artist_data = ArtistSchema().load(json_data)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        artist_data = ArtistSchema().load(json_data)
+        # except ValidationError as err:
+        #     return err.messages, 422
         new_artist = create_entry(Artist, **artist_data)
         return jsonify(ArtistData().dump(new_artist))
 
@@ -335,10 +333,10 @@ def artist_id_api(artistId):
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            data = ArtistSchema().load(json_data, partial=True)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        data = ArtistSchema().load(json_data, partial=True)
+        # except ValidationError as err:
+        #     return err.messages, 422
         updated_artist = update_entry(art, **data)
         return ArtistData().dump(updated_artist)
     if request.method == 'DELETE':
@@ -351,24 +349,13 @@ def artist_id_api(artistId):
 @auth.login_required
 def playlist_api():
     if request.method == 'POST':
-        # json_data = request.json
-        # if not json_data:
-        #     return errors.bad_request
-        # try:
-        #     playlist_data = PlaylistDataToUpdate().load(json_data)
-        # except ValidationError as err:
-        #     return err.messages, 422
-        # playlist_data.update({"updated_at": date.today()})
-        # playlist_data.update({"created_at": date.today()})
-        # new_playlist = create_entry(Playlist, **playlist_data)
-        # return jsonify(PlaylistData().dump(new_playlist))
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            playlist_data = PlaylistDataToUpdate().load(json_data)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        playlist_data = PlaylistDataToUpdate().load(json_data)
+        # except ValidationError as err:
+        #     return err.messages, 422
         playlist_data.update({"updated_at": date.today()})
         playlist_data.update({"created_at": date.today()})
         new_playlist = create_entry(Playlist, **playlist_data)
@@ -384,7 +371,7 @@ def playlist_api():
         # user_playlist_data.update({"user": new_u})
         # user_playlist_data.update({"playlist": new_playlist})
         # return jsonify(User_playlistAllData().dump(user_playlist_data)), 200
-        return jsonify(PlaylistData().dump(new_playlist))
+        return jsonify(PlaylistData().dump(new_playlist)), 200
     if request.method == 'GET':
         # playlist_list = session.query(Playlist).all()
         # user = get_current_user()
@@ -425,10 +412,10 @@ def playlist_id_api(playlistId):
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            data = PlaylistData().load(json_data, partial=True)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        data = PlaylistData().load(json_data, partial=True)
+        #except ValidationError as err:
+            #return err.messages, 422
         if (user_playlist_data.user_id != get_current_user().id) and get_current_user().username != "admin":
             return errors.no_access
         data.update({"updated_at": date.today()})
@@ -449,10 +436,10 @@ def songs_api():
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            song_data = SongSchema().load(json_data)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        song_data = SongSchema().load(json_data)
+        #except ValidationError as err:
+            #return err.messages, 422
         for key, value in song_data.items():
             if key == "genre_id":
                 new_gr_song = session.query(Genre).filter_by(id=song_data["genre_id"]).first()
@@ -495,10 +482,10 @@ def song_id_api(songId):
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            data = SongSchema().load(json_data, partial=True)
-        except ValidationError as err:
-            return err.messages,
+        #try:
+        data = SongSchema().load(json_data, partial=True)
+        #except ValidationError as err:
+            #return err.messages,
         for key, value in data.items():
             if key == "genre_id":
                 new_gr_song = session.query(Genre).filter_by(id=data["genre_id"]).first()
@@ -550,10 +537,10 @@ def artist_song_api():
         json_data = request.json
         if not json_data:
             return errors.bad_request
-        try:
-            artist_song_data = Artist_songData().load(json_data)
-        except ValidationError as err:
-            return err.messages, 422
+        #try:
+        artist_song_data = Artist_songData().load(json_data)
+        #except ValidationError as err:
+            #return err.messages, 422
         new_a = session.query(Artist).filter_by(id=artist_song_data["artist_id"]).first()
         if not new_a:
             return {'error': {'code': 404, 'message': 'Not found artist with this id'}}, 404
@@ -834,9 +821,9 @@ def playlist_songs_song_api(songId):
     return jsonify(PlaylistData().dump(playlist_song_list_data_s, many=True)), 200
 
 
-@api_blueprint.route("/user_playlist", methods=["GET"])
-@auth.login_required
-def user_playlist_api():
+# @api_blueprint.route("/user_playlist", methods=["GET"])
+# @auth.login_required
+# def user_playlist_api():
     # if request.method == 'POST':
     #     json_data = request.json
     #     if not json_data:
@@ -856,20 +843,20 @@ def user_playlist_api():
     #     user_playlist_data.update({"user": new_u})
     #     user_playlist_data.update({"playlist": new_p})
     #     return jsonify(User_playlistAllData().dump(user_playlist_data)), 200
-    if request.method == 'GET':
-        user_playlist_list = session.query(user_playlist).all()
-        user_playlist_list_data = []
-        for x in user_playlist_list:
-            us = session.query(User).filter_by(id=x.user_id).first()
-            pl = session.query(Playlist).filter_by(id=x.playlist_id).first()
-            user_playlist_data = session.query(user_playlist).filter_by(playlist_id=pl.id).first()
-            if pl.is_private != 1 or (pl.is_private == 1 and user_playlist_data.user_id == get_current_user().id) \
-                    or get_current_user().username == "admin":
-                user_playlist_data = {}
-                user_playlist_data.update({"user": us})
-                user_playlist_data.update({"playlist": pl})
-                user_playlist_list_data.append(user_playlist_data)
-        return jsonify(User_playlistAllData().dump(user_playlist_list_data, many=True)), 200
+    # if request.method == 'GET':
+    #     user_playlist_list = session.query(user_playlist).all()
+    #     user_playlist_list_data = []
+    #     for x in user_playlist_list:
+    #         us = session.query(User).filter_by(id=x.user_id).first()
+    #         pl = session.query(Playlist).filter_by(id=x.playlist_id).first()
+    #         user_playlist_data = session.query(user_playlist).filter_by(playlist_id=pl.id).first()
+    #         if pl.is_private != 1 or (pl.is_private == 1 and user_playlist_data.user_id == get_current_user().id) \
+    #                 or get_current_user().username == "admin":
+    #             user_playlist_data = {}
+    #             user_playlist_data.update({"user": us})
+    #             user_playlist_data.update({"playlist": pl})
+    #             user_playlist_list_data.append(user_playlist_data)
+    #     return jsonify(User_playlistAllData().dump(user_playlist_list_data, many=True)), 200
 
 # @api_blueprint.route('/user_playlist/user/<int:userId>/playlist/<int:playlistId>', methods=['PUT', 'DELETE'])
 # def user_playlist_a_s_id_api(userId, playlistId):
@@ -986,71 +973,71 @@ def playlist_songs_username_private_api(username):
 # ########################################################################
 
 # return songs
-@api_blueprint.route('/user_playlist/<string:username>/playlist/<int:playlistId>', methods=['GET'])
-@auth.login_required
-def user_playlist_username_playlist_id_api(username, playlistId):
-    us = session.query(User).filter_by(username=username).first()
-    if not us:
-        return errors.not_found
-    us_playlist = session.query(user_playlist).filter_by(user_id=us.id, playlist_id=playlistId).first()
-    if not us_playlist:
-        return errors.not_found
-    if request.method == 'GET':
-        user_playlist_data = {}
-        pl = session.query(Playlist).filter_by(id=us_playlist.playlist_id).first()
-        if pl.is_private == 1 and username != get_current_user().username and get_current_user().username != "admin":
-            return errors.no_access
-        playlist_song_list = session.query(playlist_song).filter_by(playlist_id=playlistId).all()
-        playlist_song_list_data_s = []
-        for x in playlist_song_list:
-            son = session.query(Song).filter_by(id=x.song_id).first()
-            playlist_song_list_data_s.append(son)
-        user_playlist_data.update({"username": username})
-        user_playlist_data.update({"playlist": pl})
-        user_playlist_data.update({"songs": playlist_song_list_data_s})
-        return jsonify(User_playlistWithSongsAllData().dump(user_playlist_data)), 200
+# @api_blueprint.route('/user_playlist/<string:username>/playlist/<int:playlistId>', methods=['GET'])
+# @auth.login_required
+# def user_playlist_username_playlist_id_api(username, playlistId):
+#     us = session.query(User).filter_by(username=username).first()
+#     if not us:
+#         return errors.not_found
+#     us_playlist = session.query(user_playlist).filter_by(user_id=us.id, playlist_id=playlistId).first()
+#     if not us_playlist:
+#         return errors.not_found
+#     if request.method == 'GET':
+#         user_playlist_data = {}
+#         pl = session.query(Playlist).filter_by(id=us_playlist.playlist_id).first()
+#         if pl.is_private == 1 and username != get_current_user().username and get_current_user().username != "admin":
+#             return errors.no_access
+#         playlist_song_list = session.query(playlist_song).filter_by(playlist_id=playlistId).all()
+#         playlist_song_list_data_s = []
+#         for x in playlist_song_list:
+#             son = session.query(Song).filter_by(id=x.song_id).first()
+#             playlist_song_list_data_s.append(son)
+#         user_playlist_data.update({"username": username})
+#         user_playlist_data.update({"playlist": pl})
+#         user_playlist_data.update({"songs": playlist_song_list_data_s})
+#         return jsonify(User_playlistWithSongsAllData().dump(user_playlist_data)), 200
 
 
 # add/delete songs without body
-@api_blueprint.route('/user_playlist/<string:username>/playlist/<int:playlistId>/song/<int:songId>',
-                     methods=['POST', 'GET', 'DELETE'])
-@auth.login_required
-def playlist_song_user_pl_song_id_api(username, playlistId, songId):
-    us = session.query(User).filter_by(username=username).first()
-    if not us:
-        return errors.not_found
-    us_playlist = session.query(user_playlist).filter_by(user_id=us.id, playlist_id=playlistId).first()
-    if not us_playlist:
-        return errors.not_found
-    if request.method == 'POST':
-        pl = session.query(Playlist).filter_by(id=playlistId).first()
-        if not pl:
-            return {'error': {'code': 404, 'message': 'Not found playlist with this id'}}, 404
-        new_s = session.query(Song).filter_by(id=songId).first()
-        if not new_s:
-            return {'error': {'code': 404, 'message': 'Not found song with this id'}}, 404
-        if pl.is_private == 1 and username != get_current_user().username:
-            return errors.no_access
-        pl.songs.append(new_s)
-        session.commit()
-        playlist_song_data = {}
-        playlist_song_data.update({"playlist": pl})
-        playlist_song_data.update({"song": new_s})
-        return jsonify(Playlist_songAllData().dump(playlist_song_data)), 200
-    if request.method == 'GET':
-        pl = session.query(Playlist).filter_by(id=playlistId).first()
-        if pl.is_private == 1 and username != get_current_user().username and get_current_user().username != "admin":
-            return errors.no_access
-        pl_song = session.query(playlist_song).filter_by(playlist_id=playlistId, song_id=songId).first()
-        if not pl_song:
-            return errors.not_found
-        son = session.query(Song).filter_by(id=pl_song.song_id).first()
-        return jsonify(SongAllData().dump(son)), 200
-    if request.method == 'DELETE':
-        old_p = session.query(Playlist).filter_by(id=playlistId).first()
-        if old_p.is_private == 1 and username != get_current_user().username and get_current_user().username != "admin":
-            return errors.no_access
-        old_s = session.query(Song).filter_by(id=songId).first()
-        old_p.songs.remove(old_s)
-        session.commit()
-        return {"message": "Deleted successfully"}, 200
+# @api_blueprint.route('/user_playlist/<string:username>/playlist/<int:playlistId>/song/<int:songId>',
+#                      methods=['POST', 'GET', 'DELETE'])
+# @auth.login_required
+# def playlist_song_user_pl_song_id_api(username, playlistId, songId):
+#     us = session.query(User).filter_by(username=username).first()
+#     if not us:
+#         return errors.not_found
+#     us_playlist = session.query(user_playlist).filter_by(user_id=us.id, playlist_id=playlistId).first()
+#     if not us_playlist:
+#         return errors.not_found
+#     if request.method == 'POST':
+#         pl = session.query(Playlist).filter_by(id=playlistId).first()
+#         if not pl:
+#             return {'error': {'code': 404, 'message': 'Not found playlist with this id'}}, 404
+#         new_s = session.query(Song).filter_by(id=songId).first()
+#         if not new_s:
+#             return {'error': {'code': 404, 'message': 'Not found song with this id'}}, 404
+#         if pl.is_private == 1 and username != get_current_user().username:
+#             return errors.no_access
+#         pl.songs.append(new_s)
+#         session.commit()
+#         playlist_song_data = {}
+#         playlist_song_data.update({"playlist": pl})
+#         playlist_song_data.update({"song": new_s})
+#         return jsonify(Playlist_songAllData().dump(playlist_song_data)), 200
+#     if request.method == 'GET':
+#         pl = session.query(Playlist).filter_by(id=playlistId).first()
+#         if pl.is_private == 1 and username != get_current_user().username and get_current_user().username != "admin":
+#             return errors.no_access
+#         pl_song = session.query(playlist_song).filter_by(playlist_id=playlistId, song_id=songId).first()
+#         if not pl_song:
+#             return errors.not_found
+#         son = session.query(Song).filter_by(id=pl_song.song_id).first()
+#         return jsonify(SongAllData().dump(son)), 200
+#     if request.method == 'DELETE':
+#         old_p = session.query(Playlist).filter_by(id=playlistId).first()
+#         if old_p.is_private == 1 and username != get_current_user().username and get_current_user().username != "admin":
+#             return errors.no_access
+#         old_s = session.query(Song).filter_by(id=songId).first()
+#         old_p.songs.remove(old_s)
+#         session.commit()
+#         return {"message": "Deleted successfully"}, 200

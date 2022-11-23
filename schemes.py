@@ -9,7 +9,7 @@ class LoginSchema(Schema):
 
 
 class UserData(Schema):
-    id = fields.Integer()
+    #id = fields.Integer()
     username = fields.String()
     first_name = fields.String()
     last_name = fields.String()

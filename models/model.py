@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
 
-DB_URI = "mysql+pymysql://root:1307ak@localhost:3306/playlist_service_db"
+DB_URI = "mysql+pymysql://root:yourpass@localhost:3306/test_database"
 engine = create_engine(DB_URI)
 
 
